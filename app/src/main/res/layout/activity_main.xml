@@ -23,7 +23,10 @@
                 android:layout_height="?attr/actionBarSize"
                 android:background="?attr/colorPrimary"
                 android:elevation="4dp"
-                android:theme="@style/ThemeOverlay.MaterialComponents.ActionBar"
+                android:theme="@style/ThemeOverlay.MaterialComponents.Light"
+                app:titleTextColor="@android:color/black"
+                app:navigationIconTint="@android:color/black"
+                app:itemIconTint="@android:color/black"
                 app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light" />
 
         </com.google.android.material.appbar.AppBarLayout>
@@ -32,19 +35,30 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#F5F5F5"
+            android:fillViewport="true"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="8dp">
+                android:orientation="vertical">
 
-                <include layout="@layout/item_apartment_listing" />
-                <include layout="@layout/item_apartment_listing" />
-                <include layout="@layout/item_apartment_listing" />
-                <include layout="@layout/item_apartment_listing" />
-                <include layout="@layout/item_apartment_listing" />
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_view_apartments"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:clipToPadding="false"
+                    tools:listitem="@layout/item_apartment_listing"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+                <Button
+                    android:id="@+id/btn_load_more"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    android:text="Показать ещё"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
@@ -84,17 +98,20 @@
             app:layout_constraintStart_toStartOf="parent">
 
             <ImageView
+                android:id="@+id/iv_logout"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginEnd="32dp"
+                android:contentDescription="@string/description_advertisement"
                 android:src="@drawable/ic_logout"
                 app:tint="?android:attr/textColorPrimary" />
 
             <TextView
+                android:id="@+id/tv_logout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="Выйти из аккаунта"
+                android:text="@string/button_title_sign_out"
                 android:textAppearance="?attr/textAppearanceSubtitle1"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textStyle="bold" />

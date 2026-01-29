@@ -2,4 +2,6 @@
     <string name="app_name">ApartmentPriceAnalyzer</string>
     <string name="navigation_drawer_open">Открыть меню</string>
     <string name="navigation_drawer_close">Закрыть меню</string>
+    <string name="description_advertisement">Объявление</string>
+    <string name="button_title_sign_out">Выйти из аккаунта</string>
 </resources>
