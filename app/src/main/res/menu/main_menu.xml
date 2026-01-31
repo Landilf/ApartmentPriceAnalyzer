@@ -7,6 +7,10 @@
         android:title="Фильтр"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_refresh"
+        android:title="Обновить"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_upload_data"
         android:title="Загрузить данные"
         app:showAsAction="never" />

@@ -99,94 +99,116 @@ public class ApartmentDetailsActivity extends AppCompatActivity {
         
         tvAddress.setText(apartment.getAddress());
         
-        if (apartment.getMetro_nearest_time() != null) {
-            tvMetro.setText(apartment.getMetro_nearest_time() + " мин");
+        Apartment.Features features = apartment.getFeatures();
+        if (features != null) {
+            if (features.getMetro_nearest_time() != null) {
+                tvMetro.setText(features.getMetro_nearest_time() + " мин");
+            } else {
+                tvMetro.setText("-");
+            }
+            
+            if (features.getTotal_area() != null) {
+                tvArea.setText(features.getTotal_area() + " м²");
+            } else {
+                tvArea.setText("-");
+            }
+            
+            if (features.getFloor_number() != null) {
+                 String floorStr = String.valueOf(features.getFloor_number());
+                 if (features.getTotal_floors_cnt() != null) {
+                     floorStr += "/" + features.getTotal_floors_cnt();
+                 }
+                 tvFloor.setText(floorStr);
+            } else {
+                 tvFloor.setText("-");
+            }
         } else {
             tvMetro.setText("-");
-        }
-        
-        if (apartment.getTotal_area() != null) {
-            tvArea.setText(apartment.getTotal_area() + " м²");
-        } else {
             tvArea.setText("-");
-        }
-        
-        // Floor is normalized (0.0 - 1.0), so displaying it directly is confusing.
-        // We show it only if it looks like an integer, otherwise maybe "Этаж: -"
-        // Or if we interpret it as relative. Let's just show it if > 1 (meaning older format) or ignore.
-        if (apartment.getFloor() != null && apartment.getFloor() > 1.0) {
-             tvFloor.setText(String.valueOf(apartment.getFloor().intValue()));
-        } else {
-             tvFloor.setText("-");
+            tvFloor.setText("-");
         }
 
         chipGroupFeatures.removeAllViews();
-        if (isTrue(apartment.getHas_fridge_flg())) addChip("Холодильник");
-        if (isTrue(apartment.getHas_washer_flg())) addChip("Стиральная машина");
-        if (isTrue(apartment.getHas_tv_flg())) addChip("Телевизор");
-        if (isTrue(apartment.getHas_internet_flg())) addChip("Интернет");
-        if (isTrue(apartment.getHas_dishwasher_flg())) addChip("Посудомойка");
-        if (isTrue(apartment.getHas_ac_flg())) addChip("Кондиционер");
-        if (isTrue(apartment.getHas_concierge_flg())) addChip("Консьерж");
-        if (isTrue(apartment.getHas_garbage_chute_flg())) addChip("Мусоропровод");
         
-        // House Types
-        if (isTrue(apartment.getHouse_type_monolithic_flg())) addChip("Монолитный");
-        if (isTrue(apartment.getHouse_type_monolithic_brick_flg())) addChip("Монолитно-кирпичный");
-        if (isTrue(apartment.getHouse_type_panel_flg())) addChip("Панельный");
-        if (isTrue(apartment.getIndividual_project_flg())) addChip("Инд. проект");
+        // Facts (Amenities)
+        if (apartment.getFacts() != null) {
+            for (String fact : apartment.getFacts()) {
+                switch (fact) {
+                    case "refrigerator": addChip("Холодильник"); break;
+                    case "washing_machine": addChip("Стиральная машина"); break;
+                    case "tv": addChip("Телевизор"); break;
+                    case "internet": addChip("Интернет"); break;
+                    case "dishwasher": addChip("Посудомойка"); break;
+                    case "ac": addChip("Кондиционер"); break;
+                    case "shower_cabin": addChip("Душевая кабина"); break;
+                    case "bathtub": addChip("Ванна"); break;
+                    case "room_furniture": addChip("Мебель в комнатах"); break;
+                    case "kitchen_furniture": addChip("Кухонная мебель"); break;
+                }
+            }
+        }
 
-        layoutFactsContainer.removeAllViews();
-        
-        // Comission
-        if (apartment.getComission() != null) {
-            int percent = (int) (apartment.getComission() * 100);
-            addFactRow("Комиссия", percent + "%");
-        }
-        
-        // Prepayment
-        if (apartment.getPrepayment_months_cnt() != null) {
-            addFactRow("Предоплата", apartment.getPrepayment_months_cnt() + " мес.");
-        }
-        
-        // Utility
-        if (apartment.getUtility_fixed_bill() != null && apartment.getUtility_fixed_bill() > 0) {
-            addFactRow("КУ (фикс)", apartment.getUtility_fixed_bill() + " ₽");
-        }
-        
-        // Counts
-        if (apartment.getCombined_bathrooms_cnt() != null && apartment.getCombined_bathrooms_cnt() > 0)
-            addFactRow("Санузел (совм.)", String.valueOf(apartment.getCombined_bathrooms_cnt()));
-        if (apartment.getSeparate_bathrooms_cnt() != null && apartment.getSeparate_bathrooms_cnt() > 0)
-            addFactRow("Санузел (разд.)", String.valueOf(apartment.getSeparate_bathrooms_cnt()));
-            
-        if (apartment.getPassenger_elevators_cnt() != null && apartment.getPassenger_elevators_cnt() > 0)
-            addFactRow("Лифт (пасс.)", String.valueOf(apartment.getPassenger_elevators_cnt()));
-        if (apartment.getFreight_elevators_cnt() != null && apartment.getFreight_elevators_cnt() > 0)
-            addFactRow("Лифт (груз.)", String.valueOf(apartment.getFreight_elevators_cnt()));
-            
-        if (apartment.getBalcony_cnt() != null && apartment.getBalcony_cnt() > 0)
-            addFactRow("Балкон", String.valueOf(apartment.getBalcony_cnt()));
-        if (apartment.getLoggia_cnt() != null && apartment.getLoggia_cnt() > 0)
-            addFactRow("Лоджия", String.valueOf(apartment.getLoggia_cnt()));
+        if (features != null) {
+            // House Type
+            if (features.getHouse_type_cat() != null && !features.getHouse_type_cat().isEmpty()) {
+                addChip(features.getHouse_type_cat());
+            }
+            if (features.getEntrance_info() != null && features.getEntrance_info().contains("мусоропровод")) {
+                addChip("Мусоропровод");
+            }
 
-        // Repair
-        if (apartment.getRepair_cat() != null) {
-            String repair = "Нет информации";
-            int cat = apartment.getRepair_cat().intValue();
-            if (cat == 1) repair = "Косметический";
-            else if (cat == 2) repair = "Евро";
-            else if (cat == 3) repair = "Дизайнерский";
-            addFactRow("Ремонт", repair);
-        }
-        
-        // Parking
-        if (apartment.getParking_cat() != null) {
-            String parking = "Нет информации";
-            int cat = apartment.getParking_cat().intValue();
-            if (cat == 1) parking = "Наземная";
-            else if (cat == 2) parking = "Подземная";
-            addFactRow("Парковка", parking);
+            layoutFactsContainer.removeAllViews();
+            
+            // Comission
+            if (features.getComission() != null) {
+                int percent = (int) (features.getComission() * 100);
+                addFactRow("Комиссия", percent + "%");
+            }
+            
+            // Prepayment
+            if (features.getPrepayment_months_cnt() != null) {
+                addFactRow("Предоплата", features.getPrepayment_months_cnt() + " мес.");
+            }
+            
+            // Utility (HCS Price)
+            if (features.getHcs_price() != null && !features.getHcs_price().isEmpty()) {
+                addFactRow("КУ", features.getHcs_price());
+            }
+            
+            // Counts
+            if (features.getCombined_bathrooms_cnt() != null && features.getCombined_bathrooms_cnt() > 0)
+                addFactRow("Санузел (совм.)", String.valueOf(features.getCombined_bathrooms_cnt()));
+            if (features.getSeparate_bathrooms_cnt() != null && features.getSeparate_bathrooms_cnt() > 0)
+                addFactRow("Санузел (разд.)", String.valueOf(features.getSeparate_bathrooms_cnt()));
+                
+            if (features.getPassenger_elevators_cnt() != null && features.getPassenger_elevators_cnt() > 0)
+                addFactRow("Лифт (пасс.)", String.valueOf(features.getPassenger_elevators_cnt()));
+            if (features.getFreight_elevators_cnt() != null && features.getFreight_elevators_cnt() > 0)
+                addFactRow("Лифт (груз.)", String.valueOf(features.getFreight_elevators_cnt()));
+                
+            if (features.getBalcony_loggia_cnt() != null && !features.getBalcony_loggia_cnt().isEmpty()) {
+                addFactRow("Балкон/Лоджия", features.getBalcony_loggia_cnt());
+            }
+
+            // Repair
+            if (features.getRepair_cat() != null && !features.getRepair_cat().isEmpty()) {
+                addFactRow("Ремонт", features.getRepair_cat());
+            }
+            
+            // Parking
+            if (features.getParking_cat() != null && !features.getParking_cat().isEmpty()) {
+                addFactRow("Парковка", features.getParking_cat());
+            }
+            
+            // Construction Year
+             if (features.getConstruction_year() != null && !features.getConstruction_year().isEmpty()) {
+                addFactRow("Год постройки", features.getConstruction_year());
+            }
+             
+             // Ceiling Height
+             if (features.getCeiling_height() != null && !features.getCeiling_height().isEmpty()) {
+                addFactRow("Высота потолков", features.getCeiling_height() + " м");
+            }
         }
     }
 
@@ -208,38 +230,19 @@ public class ApartmentDetailsActivity extends AppCompatActivity {
         TextView tvKey = new TextView(this);
         tvKey.setText(key);
         tvKey.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        // Use default secondary text appearance or a standard color attribute
-        tvKey.setTextColor(getResources().getColor(android.R.color.tab_indicator_text, null)); // Or just leave default
-
+        
         TextView tvValue = new TextView(this);
         tvValue.setText(value);
         tvValue.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         tvValue.setGravity(android.view.Gravity.END);
         tvValue.setTypeface(null, android.graphics.Typeface.BOLD);
-        // Use default primary text color
-        tvValue.setTextColor(android.graphics.Color.GRAY); // A safe bet for both themes if no attr used, but let's try something better
-        // Actually, better to use default (unset) to let theme handle it or standard gray
-        tvValue.setTextColor(getResources().getColor(android.R.color.secondary_text_dark, null)); 
         
-        // Final polish for dynamic rows: use standard theme colors
         tvKey.setTextColor(android.graphics.Color.GRAY);
-        tvValue.setTextColor(android.graphics.Color.parseColor("#808080")); // Placeholder, will fix below with proper attribute usage logic if needed, 
-        // but simplest is to use getColor from theme.
-        
-        // Let's use a more robust way:
-        tvKey.setTextColor(android.graphics.Color.GRAY);
-        tvValue.setTextColor(android.graphics.Color.GRAY); 
-        // Wait, I will just remove the explicit setTextColor to let them inherit theme defaults where possible, 
-        // or set them to a neutral gray. 
-        // Re-writing the block clearly:
+        tvValue.setTextColor(android.graphics.Color.GRAY);
         
         row.addView(tvKey);
         row.addView(tvValue);
 
         layoutFactsContainer.addView(row);
-    }
-
-    private boolean isTrue(Long val) {
-        return val != null && val == 1;
     }
 }

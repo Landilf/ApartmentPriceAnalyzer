@@ -31,6 +31,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
@@ -178,17 +179,17 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 allApartments.addAll(newItems);
-                
+
                 // Show "Load More" only if we got a full page of results
                 if (newItems.size() == PAGE_SIZE) {
                     btnLoadMore.setVisibility(View.VISIBLE);
                 } else {
                     btnLoadMore.setVisibility(View.GONE);
                 }
-                
+
                 applyFilters(); // Apply current filters to the (potentially growing) list
             } else {
-                Toast.makeText(this, "Ошибка загрузки: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Ошибка загрузки: " + Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -212,19 +213,26 @@ public class MainActivity extends AppCompatActivity {
         // Price
         Long price = apt.getPrice_per_month();
         if (currentFilters.getMinPrice() != null) {
-             if (price == null || price < currentFilters.getMinPrice()) return false;
+            if (price == null || price < currentFilters.getMinPrice()) return false;
         }
         if (currentFilters.getMaxPrice() != null) {
-             if (price == null || price > currentFilters.getMaxPrice()) return false;
+            if (price == null || price > currentFilters.getMaxPrice()) return false;
         }
 
         // Area
-        Double area = apt.getTotal_area();
-        if (currentFilters.getMinArea() != null) {
-            if (area == null || area < currentFilters.getMinArea()) return false;
-        }
-        if (currentFilters.getMaxArea() != null) {
-            if (area == null || area > currentFilters.getMaxArea()) return false;
+        // New structure: area is inside features
+        if (apt.getFeatures() != null) {
+            Double area = apt.getFeatures().getTotal_area();
+            if (currentFilters.getMinArea() != null) {
+                if (area == null || area < currentFilters.getMinArea()) return false;
+            }
+            if (currentFilters.getMaxArea() != null) {
+                if (area == null || area > currentFilters.getMaxArea()) return false;
+            }
+        } else {
+            // If features are missing but we have area filters, filter it out (or include? let's filter out)
+            if (currentFilters.getMinArea() != null || currentFilters.getMaxArea() != null)
+                return false;
         }
 
         // Rooms (parse title)
@@ -237,21 +245,10 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 if (currentFilters.getRoomCounts().contains(rooms)) matchesRoom = true;
             }
-            if (!matchesRoom) return false;
+            return matchesRoom;
         }
 
         return true;
-    }
-
-    private double parseArea(String areaStr) {
-        if (areaStr == null) return 0;
-        try {
-            String clean = areaStr.replace(",", ".").replaceAll("[^0-9.]", "");
-            if (clean.isEmpty()) return 0;
-            return Double.parseDouble(clean);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
     }
 
     private int parseRooms(String title) {
@@ -282,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
 
             tvLogout.setText("Выйти из аккаунта");
             ivLogout.setImageResource(R.drawable.ic_logout);
-            
+
             loadFavorites(user.getUid());
         } else {
             if (navProfile != null) navProfile.setVisible(false);
@@ -290,12 +287,12 @@ public class MainActivity extends AppCompatActivity {
 
             tvLogout.setText("Войти");
             ivLogout.setImageResource(R.drawable.ic_login);
-            
+
             favoriteIds.clear();
             adapter.setFavoriteIds(favoriteIds);
         }
     }
-    
+
     private void loadFavorites(String uid) {
         db.collection("users").document(uid).collection("favorites").get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -336,6 +333,9 @@ public class MainActivity extends AppCompatActivity {
                 applyFilters();
             });
             fragment.show(getSupportFragmentManager(), "filters");
+            return true;
+        } else if (id == R.id.action_refresh) {
+            loadApartments(false);
             return true;
         } else if (id == R.id.action_upload_data) {
             new ApartmentUploader(this).uploadApartments();
